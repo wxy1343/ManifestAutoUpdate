@@ -1,0 +1,3 @@
+users.json filter=git-crypt diff=git-crypt
+client/*.key filter=git-crypt diff=git-crypt
+2fa.json filter=git-crypt diff=git-crypt

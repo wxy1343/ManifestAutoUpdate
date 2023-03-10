@@ -63,24 +63,29 @@ class Pr:
         self.repo.git.remote('add', 'source', self.source_repo)
 
     def get_refs_list(self, repo=None):
-        app_list = []
-        tag_list = []
+        app_set = set()
+        tag_set = set()
+        tag_dict = {}
         if repo:
             result = self.repo.git.ls_remote(repo)
         else:
-            result = self.repo.git.ls_remote()
+            result = self.repo.git.for_each_ref('--sort=-committerdate')
         for i in result.split('\n'):
             if i:
-                sha, refs = i.split()
+                refs = i.split()[-1]
                 name = refs.split('/')[-1]
-                if refs.startswith('refs/heads/'):
+                if refs.startswith('refs/heads/') or refs.startswith('refs/remotes/'):
                     if name.isdecimal():
                         app_id = int(name)
-                        app_list.append(app_id)
+                        app_set.add(app_id)
                 elif refs.startswith('refs/tags/'):
                     if '_' in name:
-                        tag_list.append(name)
-        return app_list, tag_list
+                        tag_set.add(name)
+                        depot_id, manifest_gid = name.split('_')
+                        if depot_id in tag_dict:
+                            continue
+                        tag_dict[depot_id] = name
+        return list(app_set), list(tag_set) if repo else list(tag_dict.values())
 
     def contains(self, tag):
         try:
